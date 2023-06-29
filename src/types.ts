@@ -1,3 +1,3 @@
 export type Configuration = {
-    regexPatterns: { regex: string, timeToKeepAlive: number }
+    regexPatterns: { regex: string, timeToKeepAlive: number  }[]
 }

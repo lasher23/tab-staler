@@ -1,3 +1,6 @@
+import {Configuration} from "./types";
+import register = chrome.gcm.register;
+
 const inactiveTabTimes: Record<string, number> = {};
 
 chrome.runtime.onMessage.addListener((message: any, sender) => {
@@ -25,16 +28,11 @@ function polling() {
         async (items) => {
             chrome.tabs.query({}, tabs => {
                 tabs.filter(tab => tab.id && tab.url)
-                    .filter(tab => items.regexPatterns.some((regex: string) => new RegExp(regex).test(tab.url as string)))
-                    .filter(tab => {
-                        const currentTime = new Date().getTime();
-                        const startTime = inactiveTabTimes[tab.id as number];
-                        const timeElapsed = currentTime - startTime;
-                        return timeElapsed > 10_000
-                    })
+                    .filter(tab => (items.regexPatterns as Configuration["regexPatterns"])
+                        .some((regex) => new RegExp(regex.regex).test(tab.url as string) && new Date().getTime() - inactiveTabTimes[tab.id as number] > regex.timeToKeepAlive))
                     .forEach(tab => chrome.tabs.remove(tab.id as number))
             })
-            setTimeout(polling, 30_000);
+            setTimeout(polling, 5_000);
         })
 }
 
